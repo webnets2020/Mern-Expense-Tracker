@@ -1,62 +1,61 @@
-import React, { useState } from "react";
+import React,{useEffect,useState} from 'react';
+import ButtonAppBar from "./component/ButtonAppBar";
+import {Outlet} from 'react-router-dom';
+import {useDispatch} from 'react-redux';
+import { getUser } from './store/auth';
+import Cookies from "js-cookie";
 
 const App = () => {
-  const [form, setForm] = useState({
-    amount: 0,
-    description: "",
-    date: "",
-  });
 
-////////////////////////////////////////////////handle input field///////////////////////////////////////////////////
+  // const auth = useSelector((state)=>state.auth);
+  const dispatch = useDispatch();
+  const [isLoading,setIsLoading]=useState(true);
+  const token = Cookies.get("token");
+    
 
-  const inputHandle = (e) => {
-    setForm({ ...form,[e.target.name]: e.target.value});
-    console.log(e.target.value);
-  };
+  
+  const fetchUser = async()=>{
 
-/////////////////////////////////////////form submit send data to backend ////////////////////////////////////////
+    setIsLoading(true)
 
-  const handleSubmit = async(e) => {
-    e.preventDefault();
-    // console.log(form);
+    const res = await fetch("http://localhost:5000/user",{
+         headers:{
+             Authorization:`Bearer ${token}`,
+         },
+         "Content-Type" : "Application/json",
+     });
 
-    const res = await fetch("http://localhost:5000/transaction",{
-      method:"POST",
-      body:form
-    });
+     if(res.ok){
 
-    console.log(res)
+      const user = await res.json();
 
+      console.log(user)
 
+      dispatch(getUser(user))
 
-  };
+     }
 
+     setIsLoading(false)
+  
+  }
+
+  useEffect(()=>{
+
+    fetchUser();
+
+  },[]);
+
+  if(isLoading){
+    return <p>Loading...</p>
+  }
+
+  
+  
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="number"
-          name="amount"
-          value={form.amount}
-          placeholder="Enter Transaction Amlount"
-          onChange={inputHandle}
-        />
-        <input
-          type="text"
-          name="description"
-          value={form.description}
-          placeholder="Enter Transaction Description"
-          onChange={inputHandle}
-        />
-        <input
-          type="date"
-          name="date"
-          value={form.date}
-          onChange={inputHandle}
-        />
-        <button>Submit</button>
-      </form>
-    </div>
+    <>
+      <ButtonAppBar />
+       <Outlet />
+    </>
   );
 };
 
